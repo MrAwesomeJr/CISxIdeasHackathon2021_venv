@@ -46,8 +46,8 @@ class Map:
 
         # render initialization
         # int() is built-in floor() function
-        x_block_offset = int((self.total_map_size[0] - self.map_size[0]) / 2)
-        y_block_offset = int((self.total_map_size[1] - self.map_size[1]) / 2)
+        self.x_block_offset = int((self.total_map_size[0] - self.map_size[0]) / 2)
+        self.y_block_offset = int((self.total_map_size[1] - self.map_size[1]) / 2)
 
         self.render_map = [[1 for column in range(self.total_map_size[0])] for row in range(self.total_map_size[1])]
 
@@ -78,7 +78,14 @@ class Map:
 
     def break_target(self, x, y):
         # assume the sword hitbox intersection was checked already
-        self.render_map[y + y_block_offset][x + x_block_offset] = 0
+        self.render_map[y + self.y_block_offset][x + self.x_block_offset] = 0
+
+        # check if all targets are gone and end game when all are gone
+        end_game = True
+        for row in self.render_map:
+            if 2 in row:
+                end_game = False
+        self.done = end_game
 
     def _render(self, screen):
         # render background

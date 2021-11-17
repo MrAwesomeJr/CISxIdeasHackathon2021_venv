@@ -1,5 +1,6 @@
 import sys, pygame
 from map import Map
+from character import Character
 pygame.init()
 
 size = (width, height) = (1440, 768)
@@ -11,6 +12,7 @@ size = (width, height) = (1440, 768)
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
 map = Map("map")
+character = Character(map)
 
 
 while True:
