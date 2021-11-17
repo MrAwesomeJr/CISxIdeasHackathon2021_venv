@@ -1,6 +1,7 @@
 import pygame
 class Character:
-    def __init__(self):
+    def __init__(self, map):
+        self.map = map
         pygame.init()
         # character is calculated using the top left corner as (0,0), following pygame standards
         self.x = 0

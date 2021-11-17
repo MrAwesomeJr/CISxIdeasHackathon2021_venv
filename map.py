@@ -54,7 +54,7 @@ class Map:
         # place map on render_map
         for y in range(self.map_size[1]):
             for x in range(self.map_size[0]):
-                self.render_map[y + y_block_offset][x + x_block_offset] = self.map[y][x]
+                self.render_map[y + self.y_block_offset][x + self.x_block_offset] = self.map[y][x]
 
         # init textures
         self.textures = [0]*3
