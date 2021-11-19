@@ -23,6 +23,8 @@ class Interpreter:
         self.anim_stop = [pygame.image.load(path.join(".", "images", "stop", "unpress.png")),
                           pygame.image.load(path.join(".", "images", "stop", "press.png"))]
 
+        self.tps_logo = pygame.transform.scale(pygame.image.load(path.join(".", "images", "tps_logo.png")),(32,32))
+
         self.font = pygame.freetype.Font(path.join(".", "fonts", "Menlo.ttc"))
         self.font.size = 12
         self.font.fgcolor = (156, 170, 255)
@@ -67,6 +69,11 @@ class Interpreter:
             screen.blit(self.anim_stop[1], pygame.Rect(596, 16, 32, 32))
         else:
             screen.blit(self.anim_stop[0], pygame.Rect(596, 16, 32, 32))
+
+        screen.blit(self.tps_logo, pygame.Rect(36, 16, 32, 32))
+        font_surface, font_rect = self.font.render("Trekking Pole Squad")
+        font_rect = font_rect.move(84, 16)
+        screen.blit(font_surface, font_rect)
 
 
         # render line numbers
