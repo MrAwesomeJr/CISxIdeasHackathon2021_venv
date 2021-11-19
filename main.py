@@ -15,8 +15,9 @@ pygame.init()
 # writing section is 600 pixels wide on the left (offset of 36 on either side, additional 72 on the top for menu)
 
 screen = pygame.display.set_mode((1440, 768))
+pygame.display.set_caption("Trekking Pole Squad - CISxIdeasHackathon2021 Submission")
 clock = pygame.time.Clock()
-map = Map("map")
+map = Map("flat")
 character = Character(map)
 interpreter = Interpreter(map, character)
 
