@@ -8,9 +8,6 @@ import datetime as dt
 
 pygame.init()
 
-# turn on for fps debugging
-fps_display = True
-fps_limit = 30
 # notes on size:
 # right side of the screen is square with 48x48 display area
 # (each block is 16 pixels, because we want to fit the entire map)
@@ -19,9 +16,16 @@ fps_limit = 30
 
 screen = pygame.display.set_mode((1440, 768))
 clock = pygame.time.Clock()
-map = Map("map")
+map = Map("flat")
 character = Character(map)
 interpreter = Interpreter(map, character)
+
+# hitbox and hurtbox debugging
+character.show_hitbox = False
+character.show_hurtbox = False
+# turn on for fps debugging
+fps_display = False
+fps_limit = 30
 
 total_frames = 0
 start_time = dt.datetime.today().timestamp()
@@ -35,7 +39,10 @@ while True:
     if fps_display:
         time_diff = dt.datetime.today().timestamp() - start_time
         total_frames += 1
-        print("avg fps:",round(total_frames / time_diff,4))
+        if time_diff >= 1:
+            print("fps:",round(total_frames / time_diff,4))
+            start_time = dt.datetime.today().timestamp()
+            total_frames = 0
 
     if len(pygame.event.get(eventtype=pygame.QUIT)) >= 1:
         sys.exit()

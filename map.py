@@ -1,6 +1,7 @@
 from os import path
 import pygame
 import random
+from pygame import freetype
 
 
 class Map:
@@ -13,6 +14,8 @@ class Map:
         # total map size in pixels will be 16x48 and 16x48
 
         self.done = False
+
+        self.win_frames = 0
 
         file_data = map_file.readlines()
         # first line is map size, truncated to a maximum size of 46 (plus walls becomes 48)
@@ -60,7 +63,7 @@ class Map:
                 self.render_map[y + self.y_block_offset][x + self.x_block_offset] = self.map[y][x]
 
         # init textures
-        self.textures = [0] * 3
+        self.textures = [0] * 4
         self.textures[1] = []
         for frame in range(3):
             self.textures[1].append(pygame.image.load(path.join(".", "images", "floor", str(frame)+".png")))
@@ -68,14 +71,21 @@ class Map:
         for texture_index in range(len(self.textures[1])):
             self.textures[1][texture_index] = pygame.transform.scale(self.textures[1][texture_index], self.pixel_size)
 
-        self.textures[2] = pygame.image.load(path.join(".", "images", "target.png"))
+        self.textures[2] = pygame.image.load(path.join(".", "images", "target", "grounded.png"))
         self.textures[2] = pygame.transform.scale(self.textures[2], self.pixel_size)
+
+        self.textures[3] = pygame.image.load(path.join(".", "images", "target", "aerial.png"))
+        self.textures[3] = pygame.transform.scale(self.textures[3], self.pixel_size)
 
         self.background = pygame.image.load(path.join(".", "images", "background.png"))
         self.background = pygame.transform.scale(self.background, (self.total_map_size[0] * self.pixel_size[0],
                                                                    self.total_map_size[1] * self.pixel_size[1]))
 
         pygame.init()
+
+        self.font = pygame.freetype.Font(path.join(".", "fonts", "Menlo.ttc"))
+        self.font.size = 32
+        self.font.fgcolor = (156, 170, 255)
 
     def run(self, screen):
         # render over gameplay, and stop gameplay (follow through)
@@ -84,6 +94,7 @@ class Map:
             self._render_leaderboard(screen)
 
     def reset_map(self):
+        self.win_frames = 0
         self.render_map = [[1 for column in range(self.total_map_size[0])] for row in range(self.total_map_size[1])]
 
         # place map on render_map
@@ -93,7 +104,7 @@ class Map:
 
     def break_target(self, x, y):
         # assume the sword hitbox intersection was checked already
-        self.render_map[y + self.y_block_offset][x + self.x_block_offset] = 0
+        self.render_map[y][x] = 0
 
         # check if all targets are gone and end game when all are gone
         end_game = True
@@ -121,8 +132,21 @@ class Map:
                         random.seed((5 * x) ** 2 + (3 * y))
                         texture = random.choice(self.textures[self.render_map[y][x]])
                     else:
-                        texture = self.textures[self.render_map[y][x]]
+                        if self.render_map[y][x] == 2:
+                            if self.render_map[y+1][x] == 1:
+                                texture = self.textures[2]
+                            else:
+                                texture = self.textures[3]
+                        else:
+                            texture = self.textures[self.render_map[y][x]]
                     screen.blit(texture, block_rect)
 
     def _render_leaderboard(self, screen):
-        pass
+        background = pygame.Surface((600,660))
+        background.fill((46, 42, 54))
+        screen.blit(background,pygame.Rect(36, 72, 600, 660))
+
+        font_surface, font_rect = self.font.render("time: "+str(self.win_frames)+" frames")
+        font_rect.center = (336, 384)
+        screen.blit(font_surface, font_rect)
+

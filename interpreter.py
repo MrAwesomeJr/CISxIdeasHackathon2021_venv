@@ -3,7 +3,6 @@ from os import path
 from pygame import freetype
 from string import ascii_lowercase
 from string import digits
-from character import Character
 
 
 class Interpreter:
@@ -12,8 +11,6 @@ class Interpreter:
         self.character = character
 
         self.code = ""
-
-        self.framedata = []
 
         self.pressed_play = False
         self.pressed_stop = False
@@ -35,7 +32,16 @@ class Interpreter:
             'MOVE': self.cmd_move,
             'WAIT': self.cmd_wait}
 
+        self.error_display = ""
+
         self._reset()
+
+        self.backspace_held = False
+        self.backspace_startup = 0
+
+        self.cursor_display = True
+        self.cursor_display_timer = 0
+
 
     def run(self, screen):
         self._get_input()
@@ -70,29 +76,36 @@ class Interpreter:
             screen.blit(font_surface, font_rect)
 
         code_segments = self.code.split("\n")
+        if self.cursor_display:
+            code_segments[-1] += "|"
+        self.cursor_display_timer += 1
+        if self.cursor_display_timer >= 10:
+            self.cursor_display_timer = 0
+            self.cursor_display = not self.cursor_display
+
         for segment_index in range(len(code_segments)):
             font_surface, font_rect = self.font.render(str(code_segments[segment_index]))
             font_rect = font_rect.move(64, segment_index * 16 + 72)
             screen.blit(font_surface, font_rect)
 
 
+        # render error message
+        self.display_error(screen, update_error = False)
+
+
     def _reset(self):
         self.character.spawn()
-        self.character.freeze = True
         self.map.reset_map()
+        self.map.done = False
 
     def _get_input(self):
         # no mouse input yet for text, only keyboard
         # backspace and enter and text
-        # input for interpreter:
-        # move <left|right>
-        # stop
-        # jump
-        # attack <up|down|left|right|stop>
 
-        key_events = pygame.event.get(eventtype=pygame.KEYDOWN)
+        key_down_events = pygame.event.get(eventtype=pygame.KEYDOWN)
+        key_up_events = pygame.event.get(eventtype=pygame.KEYUP)
 
-        for key_event in key_events:
+        for key_event in key_down_events:
             if key_event.key == pygame.K_SPACE:
                 self.code += " "
             if key_event.key == pygame.K_RETURN:
@@ -103,6 +116,7 @@ class Interpreter:
                     self.code = self.code[:-2]
                 elif len(self.code) >= 1:
                     self.code = self.code[:-1]
+                self.backspace_held = True
 
             for char in ascii_lowercase:
                 if key_event.key == pygame.key.key_code(char):
@@ -111,6 +125,21 @@ class Interpreter:
             for digit in digits:
                 if key_event.key == pygame.key.key_code(digit):
                     self.code += digit
+
+        for key_event in key_up_events:
+            if key_event.key == pygame.K_BACKSPACE:
+                self.backspace_held = False
+                self.backspace_startup = 0
+
+        # special (and lazy) backspace key repeat
+        if self.backspace_held:
+            if self.backspace_startup < 9:
+                self.backspace_startup += 1
+            else:
+                if len(self.code) >= 2 and self.code[-2:] == "\n":
+                    self.code = self.code[:-2]
+                elif len(self.code) >= 1:
+                    self.code = self.code[:-1]
 
         # check for button presses
         mouse_down_events = pygame.event.get(eventtype=pygame.MOUSEBUTTONDOWN)
@@ -130,7 +159,8 @@ class Interpreter:
                 self.pressed_play = False
                 if 16 <= mouse_event.pos[1] <= 48:
                     if 548 <= mouse_event.pos[0] <= 580:
-                        self.parse(self.code)
+                        self._reset()
+                        self.interpret()
                     elif 596 <= mouse_event.pos[0] <= 628:
                         self._reset()
 
@@ -146,38 +176,82 @@ class Interpreter:
     def cmd_wait(self, time):
         time = int(time) # if this fails, interpret() will catch it
 
-    def display_error(self, error):
-        if error == None:
-            self.error_display = ""
-        else:
-            font_surface, font_rect = self.font.render(error_display)
-            font_rect = font_rect.move(52, 16)
-            screen.blit(font_surface, font_rect)
+    def display_error(self, screen, error = "", update_error = True):
+        if update_error:
+            self.error_display = error
+
+        font_surface, font_rect = self.font.render(self.error_display)
+        font_rect = font_rect.move(52, 16)
+        screen.blit(font_surface, font_rect)
+
+    def interpret(self):
+        # input for interpreter:
+        # STOP
+        # JUMP
+        # MOVE <LEFT|RIGHT>
+        # ATTACK <UP|LEFT|RIGHT>
+        # WAIT <frames>
+        lines = self.code.split("\n")
+        framedata = []
+        current_action = ""
+        for line in lines:
+            words = line.split(" ")
+            if len(words) >= 1:
+                if words[0] == "STOP":
+                    framedata.append("stop")
+                elif words[0] == "JUMP":
+                    framedata.append("jump")
+                    for i in range(12):
+                        framedata.append("")
+                    framedata.append("endjump")
+                    for i in range(4):
+                        framedata.append("")
+                elif len(words) >= 2:
+                    if words[0] == "MOVE":
+                        if words[1] == "LEFT":
+                            framedata.append("left")
+                        elif words[1] == "RIGHT":
+                            framedata.append("right")
+                    if words[0] == "ATTACK":
+                        if words[1] == "LEFT":
+                            framedata.append("atk_left")
+                        elif words[1] == "RIGHT":
+                            framedata.append("atk_right")
+                        elif words[1] == "UP":
+                            framedata.append("atk_up")
+                    if words[0] == "WAIT":
+                        try:
+                            for i in range(int(words[1])):
+                                framedata.append("")
+                        except TypeError:
+                            pass
+        self.character.framedata = framedata[:]
 
 
 
-    # stuff written by yu, thanks yu
-    def interpret(self, line):
-        if line != "":
-            args = line.split(' ')
-            if len(args) < 1: return
-            if args[0] not in self.cmds:
-                raise CodingException()
-            callback = self.cmds[args[0]]
-            try:
-                callback(args[1:])
-            except TypeError: # probably argcount mismatch
-                raise CodingException('Invalid arguments')
-            except ValueError: # probably type conversion error
-                raise CodingException('Argument type invalid')
 
-    def parse(self, code):
-        for n,line in enumerate(code.split(' ')):
-            try:
-                self.interpret(line)
-            except CodingException as e:
-                self.error_display = 'Error at line {}: {}'.format(n, e.args[0])
-                return
-
-class CodingException(Exception):
-    pass
+    # stuff written by yu, thanks yu but idk how to use any of this so i'm gonna rewrite it
+#     def interpret(self, line):
+#         if line != "":
+#             args = line.split(' ')
+#             if len(args) < 1: return
+#             if args[0] not in self.cmds:
+#                 raise CodingException()
+#             callback = self.cmds[args[0]]
+#             try:
+#                 callback(args[1:])
+#             except TypeError: # probably argcount mismatch
+#                 raise CodingException('Invalid arguments')
+#             except ValueError: # probably type conversion error
+#                 raise CodingException('Argument type invalid')
+#
+#     def parse(self, code):
+#         for n,line in enumerate(code.split(' ')):
+#             try:
+#                 self.interpret(line)
+#             except CodingException as e:
+#                 self.error_display = 'Error at line {}: {}'.format(n, e.args[0])
+#                 return
+#
+# class CodingException(Exception):
+#     pass
