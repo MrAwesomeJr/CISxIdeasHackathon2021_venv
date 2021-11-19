@@ -88,6 +88,8 @@ class Character:
         self.velocity = [0,0]
         self.facing = "right"
         self.total_frame = 0
+        self.collided = False
+        self.velocity_unchanged = False
 
 
 
