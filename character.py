@@ -20,7 +20,7 @@ class Character:
 
         # contains a list of things to animate.
         self.anim_stack = []
-        # animate once every 3 frames
+        # animate once every 3 frames (except jumpsquat, which needs to be animated every frame)
         self.anim_counter = 0
 
         self.blocking_anim = False
@@ -35,20 +35,21 @@ class Character:
         # initialize animations ((<x_offset>, <y_offset>),[<surface>])
         # x_offset and y_offset are relative to the top left corner of the character (the hitbox is 14x28)
         # all animations are facing right. Animations are flipped in self._render()
-        self.anim_idle = [(-8,0)]
-        for frame in range(4):
-            self.anim_idle.append((pygame.transform.scale(pygame.image.load(
-                path.join(".", "images", "char", "idle", str(frame)+".png")), (32, 32))))
+        self.anim_idle = self._load_char_anim((-8, 0), path.join(".", "images", "char", "idle"), (32, 32), frames = 4)
+        # self.anim_aerial = [(0, 0), pygame.transform.scale(pygame.image.load(path.join(dir, str(frame)+".png")), (0, 0))]
+        # self.anim_jump = self._load_char_anim((-8, 0), path.join(".", "images", "char", "jump"), (32, 32), frames = 1)
+        # self.anim_walk = self._load_char_anim((-8, 0), path.join(".", "images", "char", "walk"), (32, 32), frames = 1)
+        # self.anim_ftilt = self._load_char_anim((-8, 0), path.join(".", "images", "char", "ftilt"), (32, 32), frames = 1)
+        # self.anim_btilt = self._load_char_anim((-8, 0), path.join(".", "images", "char", "btilt"), (32, 32), frames = 1)
+        self.anim_utilt = self._load_char_anim((-8, -3), path.join(".", "images", "char", "utilt"), (32, 32), frames = 12)
+        # self.anim_fair = self._load_char_anim((-8, 0), path.join(".", "images", "char", "fair"), (32, 32), frames = 1)
 
-        self.anim_aerial = [(0,0),pygame.transform.scale(pygame.image.load(
-                                  path.join(".", "images", "char", "idle", "0.png")), (32, 32))]
+    def _load_char_anim(self, offset, dir, size, frames = 1):
+        anim_list = [offset]
+        for frame in range(frames):
+            anim_list.append(pygame.transform.scale(pygame.image.load(path.join(dir, str(frame)+".png")), size))
 
-        self.anim_jump = []
-        self.anim_walk = []
-        self.anim_ftilt = []
-        self.anim_btilt = []
-        self.anim_utilt = []
-        self.anim_fair = []
+        return anim_list
 
     def run(self, screen):
         # run one frame or freeze if game is frozen
@@ -123,6 +124,10 @@ class Character:
         new_pos = self.pos
         new_pos[0] += self.velocity[0]
         new_pos[1] += self.velocity[1]
+
+        # find the block your new_pos is in
+        pos_block = [0,0]
+
 
         # prevent walking into walls
 
