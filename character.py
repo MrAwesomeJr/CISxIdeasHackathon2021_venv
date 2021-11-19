@@ -160,7 +160,7 @@ class Character:
             # print(self.framedata[0])
             if self.framedata[0] == "jump":
                 if self.grounded:
-                self.push_animation(self.anim_jump, block_flag = True)
+                    self.push_animation(self.anim_jump, block_flag = True)
             elif self.framedata[0] == "endjump":
                 if self.grounded:
                     self.velocity[1] = -1.8
