@@ -1,29 +1,32 @@
 from os import path
 import pygame
+import random
+
+
 class Map:
     def __init__(self, file_name):
-        map_file = open(path.join(".","maps",file_name),"r")
+        map_file = open(path.join(".", "maps", file_name), "r")
 
-        self.render_offset = (672,0)
-        self.pixel_size = (16,16)
-        self.total_map_size = (48,48)
+        self.render_offset = (672, 0)
+        self.pixel_size = (16, 16)
+        self.total_map_size = (48, 48)
         # total map size in pixels will be 16x48 and 16x48
 
         self.done = False
 
         file_data = map_file.readlines()
-        # first line is map size, truncated to a maximum size of 48
+        # first line is map size, truncated to a maximum size of 46 (plus walls becomes 48)
         width = int(file_data[0].split(",")[0])
         height = int(file_data[0].split(",")[1])
         file_data.pop(0)
-        width = 48 if width > 48 else width
-        height = 48 if height > 48 else height
+        width = (self.total_map_size[0] - 2) if width > (self.total_map_size[0] - 2) else width
+        height = (self.total_map_size[1] - 2) if height > (self.total_map_size[1] - 2) else height
 
-        self.map_size = (width,height)
+        self.map_size = (width, height)
 
-        #initialize map with only air
+        # initialize map with only air
         self.map = [[0 for column in range(width)] for row in range(height)]
-        self.spawnpoint = (0,0)
+        self.spawnpoint = (0, 0)
 
         # map data is sorted in <x>,<y>,<type>
         # types are as follows:
@@ -38,11 +41,11 @@ class Map:
                 point_info = file_line.split(",")
                 # set the location using the information
                 # remove spawnpoint
-                if int(point_info[2]) == 3:
-                    self.spawnpoint = (int(point_info[0],int(point_info[1])))
-                else:
-                    self.map[int(point_info[1])][int(point_info[0])] = int(point_info[2])
-
+                if int(point_info[0]) < self.map_size[0] and int(point_info[1]) < self.map_size[1]:
+                    if int(point_info[2]) == 3:
+                        self.spawnpoint = [int(point_info[0]), int(point_info[1])]
+                    else:
+                        self.map[int(point_info[1])][int(point_info[0])] = int(point_info[2])
 
         # render initialization
         # int() is built-in floor() function
@@ -57,14 +60,18 @@ class Map:
                 self.render_map[y + self.y_block_offset][x + self.x_block_offset] = self.map[y][x]
 
         # init textures
-        self.textures = [0]*3
-        self.textures[1] = pygame.image.load(path.join(".","images","floor.png"))
-        self.textures[1] = pygame.transform.scale(self.textures[1], self.pixel_size)
+        self.textures = [0] * 3
+        self.textures[1] = []
+        for frame in range(3):
+            self.textures[1].append(pygame.image.load(path.join(".", "images", "floor", str(frame)+".png")))
 
-        self.textures[2] = pygame.image.load(path.join(".","images","target.png"))
+        for texture_index in range(len(self.textures[1])):
+            self.textures[1][texture_index] = pygame.transform.scale(self.textures[1][texture_index], self.pixel_size)
+
+        self.textures[2] = pygame.image.load(path.join(".", "images", "target.png"))
         self.textures[2] = pygame.transform.scale(self.textures[2], self.pixel_size)
 
-        self.background = pygame.image.load(path.join(".","images","background.png"))
+        self.background = pygame.image.load(path.join(".", "images", "background.png"))
         self.background = pygame.transform.scale(self.background, (self.total_map_size[0] * self.pixel_size[0],
                                                                    self.total_map_size[1] * self.pixel_size[1]))
 
@@ -75,6 +82,14 @@ class Map:
         self._render(screen)
         if self.done:
             self._render_leaderboard(screen)
+
+    def reset_map(self):
+        self.render_map = [[1 for column in range(self.total_map_size[0])] for row in range(self.total_map_size[1])]
+
+        # place map on render_map
+        for y in range(self.map_size[1]):
+            for x in range(self.map_size[0]):
+                self.render_map[y + self.y_block_offset][x + self.x_block_offset] = self.map[y][x]
 
     def break_target(self, x, y):
         # assume the sword hitbox intersection was checked already
@@ -89,7 +104,7 @@ class Map:
 
     def _render(self, screen):
         # render background
-        screen.blit(self.background,self.render_offset)
+        screen.blit(self.background, self.render_offset)
 
         # render foreground
         for y in range(self.total_map_size[1]):
@@ -100,7 +115,14 @@ class Map:
                                           self.pixel_size[1]))
                 # don't render air
                 if self.render_map[y][x] != 0:
-                    screen.blit(self.textures[self.render_map[y][x]], block_rect)
+                    # if texture has list, randomize based on seed (constant output for specified x,y)
+                    if type(self.textures[self.render_map[y][x]]) == list:
+                        # some random equation. Originally was x * y but that would make the textures mirrored in y = x
+                        random.seed((5 * x) ** 2 + (3 * y))
+                        texture = random.choice(self.textures[self.render_map[y][x]])
+                    else:
+                        texture = self.textures[self.render_map[y][x]]
+                    screen.blit(texture, block_rect)
 
-    def _render_leaderboard(self,screen):
+    def _render_leaderboard(self, screen):
         pass
