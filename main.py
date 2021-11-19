@@ -16,7 +16,7 @@ pygame.init()
 
 screen = pygame.display.set_mode((1440, 768))
 clock = pygame.time.Clock()
-map = Map("flat")
+map = Map("map")
 character = Character(map)
 interpreter = Interpreter(map, character)
 

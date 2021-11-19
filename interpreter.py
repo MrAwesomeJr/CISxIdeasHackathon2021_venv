@@ -133,7 +133,7 @@ class Interpreter:
 
         # special (and lazy) backspace key repeat
         if self.backspace_held:
-            if self.backspace_startup < 9:
+            if self.backspace_startup < 4:
                 self.backspace_startup += 1
             else:
                 if len(self.code) >= 2 and self.code[-2:] == "\n":

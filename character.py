@@ -164,10 +164,12 @@ class Character:
                 self.velocity[1] = -1.8
             elif self.framedata[0] == "left":
                 self.velocity[0] = -2
-                self.push_animation(self.anim_walk, facing = "left")
+                if self.grounded:
+                    self.push_animation(self.anim_walk, facing = "left")
             elif self.framedata[0] == "right":
                 self.velocity[0] = 2
-                self.push_animation(self.anim_walk, facing = "right")
+                if self.grounded:
+                    self.push_animation(self.anim_walk, facing = "right")
             elif self.framedata[0] == "stop":
                 self.velocity[0] = 0
             elif self.framedata[0] == "atk_left":
@@ -193,7 +195,6 @@ class Character:
 
 
         # calculate physics
-        print(self.velocity)
         if not self.grounded:
             self.velocity[1] += 0.05
         elif self.velocity[1] > 0:
