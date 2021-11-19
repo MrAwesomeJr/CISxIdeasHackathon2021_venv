@@ -40,7 +40,6 @@ class Map:
         for file_line in file_data:
             # skip empty lines
             if file_line != "\n":
-                file_line.removesuffix("\n")
                 point_info = file_line.split(",")
                 # set the location using the information
                 # remove spawnpoint
