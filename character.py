@@ -84,6 +84,7 @@ class Character:
         self.grounded = True
         self.framedata = []
         self.anim_stack = []
+        self.hitbox_queue = []
         self.blocking_anim = False
         self.velocity = [0,0]
         self.facing = "right"
