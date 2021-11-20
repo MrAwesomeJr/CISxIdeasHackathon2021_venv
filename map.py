@@ -90,7 +90,7 @@ class Map:
         # render over gameplay, and stop gameplay (follow through)
         self._render(screen)
         if self.done:
-            self._render_leaderboard(screen)
+            self._render_win_screen(screen)
 
     def reset_map(self):
         self.win_frames = 0
@@ -140,7 +140,7 @@ class Map:
                             texture = self.textures[self.render_map[y][x]]
                     screen.blit(texture, block_rect)
 
-    def _render_leaderboard(self, screen):
+    def _render_win_screen(self, screen):
         background = pygame.Surface((600,660))
         background.fill((46, 42, 54))
         screen.blit(background,pygame.Rect(36, 72, 600, 660))
