@@ -76,13 +76,20 @@ class Interpreter:
         screen.blit(font_surface, font_rect)
 
 
-        # render line numbers
-        for line_number in range(40):
-            font_surface, font_rect = self.font.render(str(line_number))
-            font_rect = font_rect.move(48, line_number * 16 + 72)
-            screen.blit(font_surface, font_rect)
-
+        # render lines
         code_segments = self.code.split("\n")
+        column_count = int((len(code_segments) + 39) / 40)
+        if column_count <= 0:
+            column_count = 1
+
+        column_width = 600 / column_count
+
+        for column_number in range(column_count):
+            for line_number in range(40):
+                font_surface, font_rect = self.font.render(str(line_number + (40 * column_number)))
+                font_rect = font_rect.move(48 + (column_width * column_number), line_number * 16 + 72)
+                screen.blit(font_surface, font_rect)
+
         if self.cursor_display:
             code_segments[-1] += "|"
         self.cursor_display_timer += 1
@@ -92,7 +99,7 @@ class Interpreter:
 
         for segment_index in range(len(code_segments)):
             font_surface, font_rect = self.font.render(str(code_segments[segment_index]))
-            font_rect = font_rect.move(64, segment_index * 16 + 72)
+            font_rect = font_rect.move(72 + (int(segment_index / 40) * column_width), (segment_index % 40) * 16 + 72)
             screen.blit(font_surface, font_rect)
 
 

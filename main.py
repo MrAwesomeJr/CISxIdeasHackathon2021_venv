@@ -17,7 +17,7 @@ pygame.init()
 screen = pygame.display.set_mode((1440, 768))
 pygame.display.set_caption("Trekking Pole Squad - CISxIdeasHackathon2021 Submission")
 clock = pygame.time.Clock()
-map = Map("flat")
+map = Map("map")
 character = Character(map)
 interpreter = Interpreter(map, character)
 

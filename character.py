@@ -169,10 +169,12 @@ class Character:
                     self.velocity[1] = -1.8
             elif self.framedata[0] == "left":
                 self.velocity[0] = -2
+                self.facing = "left"
                 if self.grounded:
                     self.push_animation(self.anim_walk, facing = "left")
             elif self.framedata[0] == "right":
                 self.velocity[0] = 2
+                self.facing = "right"
                 if self.grounded:
                     self.push_animation(self.anim_walk, facing = "right")
             elif self.framedata[0] == "stop":
@@ -246,7 +248,7 @@ class Character:
             if not intersect:
                 self.collided = False
                 # test if grounded
-                self.grounded = self._block_intersect([new_pos[0],new_pos[1]+1], self.size)
+                self.grounded = self._block_intersect([new_pos[0],new_pos[1]+2], self.size)
                 self.pos = [round(self.pos[0],2),round(self.pos[1],2)]
                 new_pos = [round(new_pos[0],2),round(new_pos[1],2)]
                 if self.pos != new_pos:
@@ -257,7 +259,7 @@ class Character:
 
         # hitboxes
         attack_length = 10
-        attack_width = 2
+        attack_width = 10
         if len(self.hitbox_queue) > 0:
             if self.hitbox_queue[0] == "up":
                 hitbox_pos = [self.pos[0] + (self.size[0] - attack_width) / 2, self.pos[1] - attack_length]
